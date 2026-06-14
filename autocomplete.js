@@ -1,4 +1,4 @@
-const createAutoComplete = ({root , renderOption}) => {
+const createAutoComplete = ({root , renderOption,onOptionSelect , inputValue}) => {
 root.innerHTML = `
   <label class="mb-2 block font-bold text-gray-800">Search For a Movie</label>
   <input class="w-full rounded-md border border-gray-300 bg-white px-4 py-2 text-gray-900 shadow-sm outline-none transition focus:border-teal-500 focus:ring-2 focus:ring-teal-200" />
@@ -38,8 +38,8 @@ for (let movie of movies) {
     option.innerHTML = renderOption(movie)
     option.addEventListener('click', () => {
     dropdown.classList.add('hidden');
-    input.value = movie.Title;
-    onMovieSelect(movie);
+    input.value = inputValue(movie);
+    onOptionSelect(movie)
   });
 
   resultsWrapper.appendChild(option);

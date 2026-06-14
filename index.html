@@ -3,6 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Movie Fight</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.19.0/axios.min.js"></script>
     <link
@@ -10,28 +11,40 @@
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/all.css"
     />
     <link rel="stylesheet" href="style.css" />
-    <title>Movie Fight</title>
   </head>
-  <body class="min-h-screen bg-gray-50 text-gray-900">
-    <section class="mb-5 bg-gradient-to-r from-teal-600 to-emerald-500 text-white shadow">
-      <div class="py-12">
-        <div class="mx-auto max-w-6xl px-4">
-          <h1 class="flex items-center text-5xl font-semibold tracking-tight">
-            Movie Fight
-            <span class="ml-4 inline-flex items-center text-4xl">
-              <i class="fas fa-film"></i>
-            </span>
-          </h1>
-        </div>
+
+  <body class="min-h-screen bg-slate-50 text-slate-900">
+    <section class="mb-5 bg-gradient-to-r from-teal-500 to-emerald-500 text-white shadow-sm">
+      <div class="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
+        <h1 class="flex items-center text-3xl font-semibold leading-tight sm:text-4xl">
+          Movie Fight
+          <span class="ml-4 inline-flex items-center text-3xl" aria-hidden="true">
+            <i class="fas fa-film"></i>
+          </span>
+        </h1>
       </div>
     </section>
 
+    <main class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+      <div class="grid gap-8 md:grid-cols-2">
+        <div>
+          <div id="left-autocomplete"></div>
+          <div id="left-summary"></div>
+        </div>
 
-    <main class="mx-auto max-w-6xl px-4">
-      <div class="autocomplete"></div>
-      <div id="summary"></div>
+        <div>
+          <div id="right-autocomplete"></div>
+          <div id="right-summary"></div>
+        </div>
+      </div>
+
+      <div class="tutorial mx-auto mt-8 max-w-[600px] rounded-md bg-teal-500 px-6 py-5 text-center text-white shadow-sm">
+        <h1 class="text-3xl font-semibold leading-tight">Search For a Movie on Both Sides</h1>
+        <p class="mt-2 text-xl font-light">We will tell you which is best!</p>
+      </div>
     </main>
 
+    <script src="utils.js"></script>
     <script src="autocomplete.js"></script>
     <script src="index.js"></script>
   </body>

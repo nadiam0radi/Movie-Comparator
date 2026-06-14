@@ -1,81 +1,161 @@
+const statPrimaryClasses = ['bg-teal-500', 'text-white'];
+const statWarningClasses = ['bg-yellow-400', 'text-yellow-950'];
+const statBaseClasses = [
+  'movie-stat',
+  'mt-5',
+  'rounded-md',
+  'px-5',
+  'py-4',
+  'shadow-sm',
+  'transition-colors'
+];
 
-createAutoComplete({
-  root:document.querySelector('.autocomplete'),
-  renderOption(movie){
-    const imgSrc = movie.Poster === 'N/A' ? '' : movie.Poster;
-    return`
-        <img class="h-[50px] w-[35px] object-cover" src{imgSrc}" alt="${movie.Title}" />
-        <span>${movie.Title}</span> (${movie.Year})
-    `
+const autoCompleteConfig = {
+  renderOption(movie) {
+    const poster = movie.Poster === 'N/A'
+      ? '<span class="mr-3 h-[50px] w-[34px] flex-shrink-0 rounded bg-slate-200"></span>'
+      : `<img class="mr-3 h-[50px] w-[34px] flex-shrink-0 rounded object-cover" src="${movie.Poster}" alt="${movie.Title} poster" />`;
+
+    return `
+      ${poster}
+      <span>${movie.Title} (${movie.Year})</span>
+    `;
   },
-  onOptionSelect(movie){
-    onMovieSelect(movie)
-  },
-  inputValue(movie){
-    return movie.Title
+  inputValue(movie) {
+    return movie.Title;
   },
   async fetchData(searchTerm) {
     const response = await axios.get('https://www.omdbapi.com/', {
       params: {
-        apikey: 'af62b238',
+        apikey: 'd9835cc5',
         s: searchTerm
       }
     });
 
-    if(response.data.Error){
-        return []
+    if (response.data.Error) {
+      return [];
     }
+
     return response.data.Search;
   }
+};
 
-})
+createAutoComplete({
+  ...autoCompleteConfig,
+  root: document.querySelector('#left-autocomplete'),
+  onOptionSelect(movie) {
+    document.querySelector('.tutorial').classList.add('hidden');
+    onMovieSelect(movie, document.querySelector('#left-summary'), 'left');
+  }
+});
+createAutoComplete({
+  ...autoCompleteConfig,
+  root: document.querySelector('#right-autocomplete'),
+  onOptionSelect(movie) {
+    document.querySelector('.tutorial').classList.add('hidden');
+    onMovieSelect(movie, document.querySelector('#right-summary'), 'right');
+  }
+});
 
-const onMovieSelect = async (movie) => {
-    const response = await axios.get('https://www.omdbapi.com/', {
-      params: {
-        apikey: 'af62b238',
-        i: movie.imdbID
-      }
-    });
-  document.querySelector('#summary').innerHTML = movieTemplate(response.data);
-}
+let leftMovie;
+let rightMovie;
+const onMovieSelect = async (movie, summaryElement, side) => {
+  const response = await axios.get('https://www.omdbapi.com/', {
+    params: {
+      apikey: 'd9835cc5',
+      i: movie.imdbID
+    }
+  });
+
+  summaryElement.innerHTML = movieTemplate(response.data);
+
+  if (side === 'left') {
+    leftMovie = response.data;
+  } else {
+    rightMovie = response.data;
+  }
+
+  if (leftMovie && rightMovie) {
+    runComparison();
+  }
+};
+
+const runComparison = () => {
+  const leftSideStats = document.querySelectorAll(
+    '#left-summary .movie-stat'
+  );
+  const rightSideStats = document.querySelectorAll(
+    '#right-summary .movie-stat'
+  );
+
+  leftSideStats.forEach((leftStat, index) => {
+    const rightStat = rightSideStats[index];
+
+    const leftSideValue = Number(leftStat.dataset.value);
+    const rightSideValue = Number(rightStat.dataset.value);
+
+    if (rightSideValue > leftSideValue) {
+      leftStat.classList.remove(...statPrimaryClasses);
+      leftStat.classList.add(...statWarningClasses);
+    } else {
+      rightStat.classList.remove(...statPrimaryClasses);
+      rightStat.classList.add(...statWarningClasses);
+    }
+  });
+};
+
+const statCardClasses = [...statBaseClasses, ...statPrimaryClasses].join(' ');
 
 const movieTemplate = movieDetail => {
+  const dollars = parseInt(
+    movieDetail.BoxOffice.replace(/\$/g, '').replace(/,/g, '')
+  );
+  const metascore = parseInt(movieDetail.Metascore);
+  const imdbRating = parseFloat(movieDetail.imdbRating);
+  const imdbVotes = parseInt(movieDetail.imdbVotes.replace(/,/g, ''));
+  const awards = movieDetail.Awards.split(' ').reduce((prev, word) => {
+    const value = parseInt(word);
+
+    if (isNaN(value)) {
+      return prev;
+    } else {
+      return prev + value;
+    }
+  }, 0);
+
   return `
-    <article class="mt-8 flex flex-col gap-6 md:flex-row">
-      <figure class="flex justify-center bg-black md:w-40 md:flex-none">
-        <p class="flex justify-center bg-black">
-          <img class="w-32 object-cover" src="${movieDetail.Poster}" />
-        </p>
+    <article class="mt-8 flex gap-4">
+      <figure class="flex min-w-[128px] justify-center bg-black">
+        <img class="w-32 object-cover" src="${movieDetail.Poster}" alt="${movieDetail.Title} poster" />
       </figure>
-      <div class="flex-1">
+      <div class="min-w-0 flex-1">
         <div>
-          <h1 class="mb-2 text-3xl font-semibold leading-tight">${movieDetail.Title}</h1>
-          <h4 class="mb-3 text-xl font-semibold text-gray-700">${movieDetail.Genre}</h4>
-          <p class="leading-7 text-gray-700">${movieDetail.Plot}</p>
+          <h1 class="text-3xl font-semibold leading-tight text-slate-900">${movieDetail.Title}</h1>
+          <h4 class="mt-1 text-xl font-semibold text-slate-700">${movieDetail.Genre}</h4>
+          <p class="mt-3 text-slate-700">${movieDetail.Plot}</p>
         </div>
       </div>
     </article>
 
-    <article class="mt-5 rounded bg-teal-500 p-5 text-white shadow">
-      <p class="text-2xl font-semibold leading-tight">${movieDetail.Awards}</p>
-      <p class="mt-1 text-xl">Awards</p>
+    <article data-value=${awards} class="${statCardClasses}">
+      <p class="text-3xl font-semibold leading-tight">${movieDetail.Awards}</p>
+      <p class="mt-1 text-xl font-light">Awards</p>
     </article>
-    <article class="mt-5 rounded bg-teal-500 p-5 text-white shadow">
-      <p class="text-2xl font-semibold leading-tight">${movieDetail.BoxOffice}</p>
-      <p class="mt-1 text-xl">Box Office</p>
+    <article data-value=${dollars} class="${statCardClasses}">
+      <p class="text-3xl font-semibold leading-tight">${movieDetail.BoxOffice}</p>
+      <p class="mt-1 text-xl font-light">Box Office</p>
     </article>
-    <article class="mt-5 rounded bg-teal-500 p-5 text-white shadow">
-      <p class="text-2xl font-semibold leading-tight">${movieDetail.Metascore}</p>
-      <p class="mt-1 text-xl">Metascore</p>
+    <article data-value=${metascore} class="${statCardClasses}">
+      <p class="text-3xl font-semibold leading-tight">${movieDetail.Metascore}</p>
+      <p class="mt-1 text-xl font-light">Metascore</p>
     </article>
-    <article class="mt-5 rounded bg-teal-500 p-5 text-white shadow">
-      <p class="text-2xl font-semibold leading-tight">${movieDetail.imdbRating}</p>
-      <p class="mt-1 text-xl">IMDB Rating</p>
+    <article data-value=${imdbRating} class="${statCardClasses}">
+      <p class="text-3xl font-semibold leading-tight">${movieDetail.imdbRating}</p>
+      <p class="mt-1 text-xl font-light">IMDB Rating</p>
     </article>
-    <article class="mt-5 rounded bg-teal-500 p-5 text-white shadow">
-      <p class="text-2xl font-semibold leading-tight">${movieDetail.imdbVotes}</p>
-      <p class="mt-1 text-xl">IMDB Votes</p>
+    <article data-value=${imdbVotes} class="${statCardClasses}">
+      <p class="text-3xl font-semibold leading-tight">${movieDetail.imdbVotes}</p>
+      <p class="mt-1 text-xl font-light">IMDB Votes</p>
     </article>
   `;
 };
